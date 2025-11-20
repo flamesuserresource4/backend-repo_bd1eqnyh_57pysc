@@ -11,7 +11,7 @@ Model name is converted to lowercase for the collection name:
 - BlogPost -> "blogs" collection
 """
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, AnyUrl
 from typing import Optional
 
 # Example schemas (replace with your own):
@@ -52,6 +52,21 @@ class Inquiry(BaseModel):
     service: Optional[str] = Field(None, description="Service type interested in")
     budget: Optional[str] = Field(None, description="Estimated budget range")
     timeline: Optional[str] = Field(None, description="Desired timeline")
+
+# Careers applications schema
+class Application(BaseModel):
+    """
+    Job applications for careers
+    Collection name: "application"
+    """
+    name: str = Field(..., description="Applicant full name")
+    email: EmailStr = Field(..., description="Applicant email")
+    phone: Optional[str] = Field(None, description="Phone number")
+    role: str = Field(..., description="Applied role or position")
+    message: Optional[str] = Field(None, description="Cover letter / message")
+    linkedin: Optional[AnyUrl] = Field(None, description="LinkedIn profile URL")
+    portfolio: Optional[AnyUrl] = Field(None, description="Portfolio or website URL")
+    resume_url: Optional[AnyUrl] = Field(None, description="Link to resume or CV")
 
 # Add your own schemas here:
 # --------------------------------------------------

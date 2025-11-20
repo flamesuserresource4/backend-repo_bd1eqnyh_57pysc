@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from schemas import Inquiry
+from schemas import Inquiry, Application
 from database import create_document, get_documents, db
 
 app = FastAPI(title="Illuminati Pvt Ltd API")
@@ -100,14 +100,48 @@ def list_inquiries(limit: int = Query(20, ge=1, le=100)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ----- Careers Application Endpoints -----
+class ApplicationCreateResponse(BaseModel):
+    id: str
+    message: str
+
+
+@app.post("/api/applications", response_model=ApplicationCreateResponse)
+def create_application(application: Application):
+    try:
+        new_id = create_document("application", application)
+        return {"id": new_id, "message": "Application submitted. Our HR team will reach out if there's a fit."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ApplicationOut(Application):
+    id: Optional[str] = None
+
+
+@app.get("/api/applications", response_model=List[ApplicationOut])
+def list_applications(limit: int = Query(20, ge=1, le=100)):
+    try:
+        docs = get_documents("application", {}, limit)
+        out: List[ApplicationOut] = []
+        for d in docs:
+            d_copy = {k: v for k, v in d.items() if k not in ["_id"]}
+            d_copy["id"] = str(d.get("_id")) if d.get("_id") else None
+            out.append(ApplicationOut(**d_copy))
+        return out
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Optional: expose schemas for tooling
 @app.get("/schema")
 def get_schema():
-    from schemas import User, Product, Inquiry as InquirySchema
+    from schemas import User, Product, Inquiry as InquirySchema, Application as ApplicationSchema
     return {
         "user": User.model_json_schema(),
         "product": Product.model_json_schema(),
         "inquiry": InquirySchema.model_json_schema(),
+        "application": ApplicationSchema.model_json_schema(),
     }
 
 
